@@ -1,0 +1,18 @@
+services:
+# Optional: containers services
+
+version: '3'
+services:
+  main:
+    # Ensure full device access and permissions
+    privileged: true
+    devices:
+      - /dev/snd:/dev/snd
+    #volumes:
+      #- /proc/asound:/proc/asound:ro
+    # Explicitly force ALSA configurations to default to card 0
+    #environment:
+      #- ALSA_CARD=0
+      #- ALSA_PCM_CARD=0
+   group_add:
+   - audio

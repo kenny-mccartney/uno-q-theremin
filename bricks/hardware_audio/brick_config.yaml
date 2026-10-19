@@ -1,0 +1,3 @@
+id: hardware_audio
+name: hardware_audio
+equire_containers: true

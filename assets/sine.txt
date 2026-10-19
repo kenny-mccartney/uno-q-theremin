@@ -1,0 +1,63 @@
+python
+import alsaaudio
+import numpy as np
+import math
+import time
+
+# 1. Setup the physical audio hardware stream bypassing App Lab's scanner
+# 'hw:0,0' represents the native Qualcomm chip broken out on the Media Carrier
+try:
+    device = alsaaudio.PCM(
+        type=alsaaudio.PCM_PLAYBACK,
+        mode=alsaaudio.PCM_NORMAL,
+        device='hw:0,0'
+    )
+    device.setchannels(1)           # Mono audio output
+    device.setrate(48000)          # 48kHz sampling rate
+    device.setformat(alsaaudio.PCM_FORMAT_S16_LE) # 16-bit Signed Little-Endian
+    device.setperiodsize(160)      # Low latency buffer chunk
+    print("Successfully initialized Media Extender audio hardware!")
+except Exception as e:
+    print(f"Hardware initialization failed: {e}")
+    device = None
+
+# 2. Re-create your Theremin wave-generation loop manually
+def play_theremin_tone(frequency, duration_sec=0.1):
+    if device is None:
+        return
+        
+    sample_rate = 48000
+    num_samples = int(sample_rate * duration_sec)
+    
+    # Calculate the mathematical sine wave array
+    t = np.linspace(0, duration_sec, num_samples, False)
+    wave = np.sin(frequency * t * 2 * np.pi)
+    
+    # Convert floating point math (-1.0 to 1.0) to raw 16-bit PCM binary data
+    audio_buffer = (wave * 32767).astype(np.int16).tobytes()
+    
+    # Write directly to the hardware stream
+    device.write(audio_buffer)
+
+# Example Execution loop inside your app
+# (Replace this loop with your actual antenna/sensor parsing logic)
+if __name__ == "__main__":
+    print("Theremin Simulator Running... Press Ctrl+C in console to stop.")
+    try:
+        while True:
+            # Simulate playing a shifting pitch (e.g. 440Hz A note to 880Hz)
+            play_theremin_tone(frequency=440, duration_sec=0.05)
+    except KeyboardInterrupt:
+        print("Stopping Theremin.")
+
+
+
+
+version: '3'
+services:
+  main:
+    privileged: true
+    devices:
+      - /dev/snd:/dev/snd
+    group_add:
+      - audio
